@@ -1,0 +1,27 @@
+{
+    "files.associations": {
+        "*.scf"             : "asm-collection",
+        "ostream"           : "cpp",
+        "iostream"          : "cpp",
+        "iomanip"           : "cpp",
+        "chrono"            : "cpp",
+        "iosfwd"            : "cpp",
+        "thread"            : "cpp",
+        "array"             : "cpp",
+        "string_view"       : "cpp",
+        "initializer_list"  : "cpp",
+        "utility"           : "cpp",
+        "valarray"          : "cpp",
+        "optional"          : "cpp",
+        "sstream"           : "cpp",
+        "cstdlib"           : "cpp",
+        "ranges"            : "cpp",
+        "string"            : "cpp",
+        "format"            : "cpp",
+        "regex"             : "cpp",
+        "random"            : "cpp",
+        "cstring"           : "cpp",
+        "cstdint"           : "cpp",
+        "flat_set"          : "cpp"
+    }
+}
