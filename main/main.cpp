@@ -1,6 +1,22 @@
 #include "main.hpp"
 
+compilation_middleware_type compile_mw;
 int main(int argc, char *argv[])
 {
+    if ((argc == 2) && (argv))
+    {
+        compile_mw.firm_image.file = argv[1];
+        if (open_file(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+            goto execution_error;
+        printf("%s(%d)\n\r", argv[1], compile_mw.firm_image.size);
+
+        frontend_passes(&compile_mw.firm_image.file, &compile_mw.firm_image.size);
+    }
+    goto end_of_program;
+
+execution_error:
+    printf("an error has occurred...");
+end_of_program:
+    getchar();
     return 0;
 }

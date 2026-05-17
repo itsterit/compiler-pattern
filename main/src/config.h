@@ -1,9 +1,16 @@
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
+#include <cstdint>
 
-#define __PLATFORM__WINDOWS__
+typedef struct
+{
+    struct
+    {
+        char *file;
+        uint32_t size;
+    } firm_image;
 
-#define HEADER_WINDOW_HEIGH 1
-#define BODY_WINDOW_BORDER 1
+} compilation_middleware_type;
+extern compilation_middleware_type compilation_middleware;
 
 #endif /* __CONFIG_H__ */

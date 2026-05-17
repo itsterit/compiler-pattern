@@ -8,4 +8,7 @@
 #include <cstdlib>
 #include <cstring>
 
+#include "core/system/file_sys/file_sys.hpp"
+#include "core/compiler/compiler.hpp"
+
 #endif /* __MAIN_HPP__ */
