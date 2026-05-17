@@ -12,13 +12,18 @@ int main(int argc, char *argv[])
         printf("source file: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
 
         // Убираем все лишнее
-        if (frontend_passes(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+        if (frontend_pass(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
             goto execution_error;
         printf("frontend passes: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
 
         // Вывод упрощенного файла
-        if (recreate_file((char *)"frontend_passes.log", compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+        if (recreate_file((char *)"frontend_pass.log", compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
             goto execution_error;
+
+        // Определение адресации
+        if (analysis_pass(compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+            goto execution_error;
+        printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
     }
     goto end_of_program;
 

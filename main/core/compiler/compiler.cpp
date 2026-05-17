@@ -1,7 +1,6 @@
 #include "compiler.hpp"
-#include "instructions_sets/system_instructions_sets.hpp"
 
-bool frontend_passes(char **file, uint32_t *size)
+bool frontend_pass(char **file, uint32_t *size)
 {
     if (file != NULL && *file != NULL && size != NULL)
     {
@@ -61,4 +60,23 @@ bool frontend_passes(char **file, uint32_t *size)
         return *size;
     }
     return 0;
+}
+
+bool analysis_pass(char *file, uint32_t *size)
+{
+    if (file != NULL && size != NULL)
+    {
+        uint32_t line_cnt = 0, char_cnt = 0;
+        for (char_cnt = 0; char_cnt < *size; char_cnt++)
+            if (file[char_cnt] == '\n')
+                line_cnt++;
+
+        *size = line_cnt;
+        ParsedFile_t *parsed_file = (ParsedFile_t *)malloc(sizeof(ParsedFile_t) * line_cnt);
+        if (line_cnt && parsed_file != NULL)
+        {
+            return true;
+        }
+    }
+    return false;
 }
