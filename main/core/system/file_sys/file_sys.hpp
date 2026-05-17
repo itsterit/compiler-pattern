@@ -3,5 +3,6 @@
 #include "main.hpp"
 
 bool open_file(char **file_name, uint32_t *ret_file_size);
+bool recreate_file(char *file_name, char *data_ptr, uint32_t *ret_file_size);
 
 #endif /* __FILE_SYS_H__ */

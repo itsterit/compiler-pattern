@@ -3,95 +3,81 @@
 
 bool frontend_passes(char **file, uint32_t *size)
 {
-    char *src = *file; // Указатель для чтения
-    char *dst = *file; // Указатель для записи (сдвигаем код влево)
-    uint32_t totalSize = *size;
-
-    char *lineStart = src;
-    uint32_t i = 0;
-
-    while (i <= totalSize)
+    if (file != NULL && *file != NULL && size != NULL)
     {
-        // Ищем конец текущей строки (символ '\n' или конец файла '\0')
-        if (src[i] == '\n' || src[i] == '\0')
+        char *src = *file, *dst = *file, *lineStart = src;
+        uint32_t char_cnt = 0, totalSize = *size;
+
+        while (char_cnt <= totalSize)
         {
-            char nextChar = src[i];
-
-            // 1. Анализируем строку от lineStart до src[i]
-            char *codeEnd = NULL; // Конец полезного кода в строке
-            int hasCode = 0;      // Флаг: есть ли в строке значащие символы (не пробелы и не комментарии)
-            int insideComment = 0;
-
-            for (char *p = lineStart; p < &src[i]; p++)
+            // Ищем конец текущей строки (символ '\n' или конец файла '\0')
+            if (src[char_cnt] == '\n' || src[char_cnt] == '\0')
             {
-                if (*p == ';')
+                char nextChar = src[char_cnt], *codeEnd = NULL;
+                int hasCode = 0, insideComment = 0;
+
+                // Анализируем строку до комментария или конца строки
+                for (char *p = lineStart; p < &src[char_cnt]; p++)
                 {
-                    insideComment = 1;
-                }
-                if (!insideComment)
-                {
-                    if (!isspace((unsigned char)*p))
+                    if (*p == ';')
                     {
-                        hasCode = 1;
-                        codeEnd = p + 1; // Запоминаем последний значащий символ + 1
+                        insideComment = 1;
+                    }
+                    if (!insideComment)
+                    {
+                        if (!isspace((unsigned char)*p))
+                        {
+                            hasCode = 1;
+                            codeEnd = p + 1;
+                        }
                     }
                 }
-            }
 
-            // 2. Если в строке есть полезный код, копируем его в dst
-            if (hasCode && codeEnd != NULL)
-            {
-                // Копируем только код до комментария (без лишних пробелов в конце)
-                for (char *p = lineStart; p < codeEnd; p++)
+                // Если в строке есть полезный код, копируем его, переводя в UPPERCASE
+                if (hasCode && codeEnd != NULL)
                 {
-                    *dst++ = *p;
+                    for (char *p = lineStart; p < codeEnd; p++)
+                    {
+                        *dst++ = (char)toupper((unsigned char)*p);
+                    }
+                    if (nextChar == '\n')
+                    {
+                        *dst++ = '\n';
+                    }
                 }
-                // Если исходная строка заканчивалась переносом, сохраняем его
-                if (nextChar == '\n')
+
+                if (nextChar == '\0')
                 {
-                    *dst++ = '\n';
+                    break;
+                }
+                lineStart = &src[char_cnt + 1];
+            }
+            char_cnt++;
+        }
+
+        // Завершаем строку и обновляем итоговый размер
+        *dst = '\0';
+        *size = (uint32_t)(dst - *file);
+
+        // Выводим результат в консоль
+        int lineNumber = 1;
+        if (*size > 0)
+        {
+            printf("[%03d] ", lineNumber++);
+            for (uint32_t j = 0; j < *size; j++)
+            {
+                putchar((*file)[j]);
+                if ((*file)[j] == '\n' && j + 1 < *size)
+                {
+                    printf("[%03d] ", lineNumber++);
                 }
             }
-
-            // Переходим к следующей строке
-            if (nextChar == '\0')
+            if ((*file)[*size - 1] != '\n')
             {
-                break;
+                printf("\n");
             }
-            lineStart = &src[i + 1];
-        }
-        i++;
-    }
-
-    // Добавляем финальный терминальный ноль
-    *dst = '\0';
-
-    // Обновляем размер файла (сколько байт реально осталось)
-    *size = (uint32_t)(dst - *file);
-
-    // Выводим очищенный файл на экран
-    int lineNumber = 1;
-    if (*size > 0)
-    {
-        printf("[%03d] ", lineNumber++);
-        for (uint32_t j = 0; j < *size; j++)
-        {
-            putchar((*file)[j]);
-            if ((*file)[j] == '\n' && j + 1 < *size)
-            {
-                printf("[%03d] ", lineNumber++);
-            }
-        }
-        // Добавляем перенос строки в конце вывода, если его там нет
-        if ((*file)[*size - 1] != '\n')
-        {
-            printf("\n");
+            return 1;
         }
     }
-    else
-    {
-        printf("[Файл пуст после очистки]\n");
-    }
-
-    return 1;
+    return 0;
 }

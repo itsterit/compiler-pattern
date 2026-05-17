@@ -5,12 +5,18 @@ int main(int argc, char *argv[])
 {
     if ((argc == 2) && (argv))
     {
+        // Чтение файла
         compile_mw.firm_image.file = argv[1];
         if (open_file(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
             goto execution_error;
-        printf("%s(%d)\n\r", argv[1], compile_mw.firm_image.size);
+        printf("source file: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
 
-        frontend_passes(&compile_mw.firm_image.file, &compile_mw.firm_image.size);
+        // Убираем все лишнее
+        if (frontend_passes(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+            goto execution_error;
+        printf("frontend passes: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
+
+        recreate_file((char *)"frontend_passes.log", compile_mw.firm_image.file, &compile_mw.firm_image.size);
     }
     goto end_of_program;
 

@@ -31,3 +31,21 @@ bool open_file(char **file_name, uint32_t *ret_file_size)
     }
     return 0;
 }
+
+bool recreate_file(char *file_name, char *data_ptr, uint32_t *ret_file_size)
+{
+    if (file_name != NULL && data_ptr != NULL && ret_file_size != NULL)
+    {
+        uint32_t bytes_to_write = *ret_file_size;
+        FILE *file = fopen(file_name, "wb");
+
+        if ((file != NULL) && (bytes_to_write != 0))
+        {
+            *ret_file_size = fwrite(data_ptr, 1, bytes_to_write, file);
+            fclose(file);
+            return (*ret_file_size == bytes_to_write);
+        }
+        *ret_file_size = 0;
+    }
+    return 0;
+}
