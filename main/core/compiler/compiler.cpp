@@ -1,4 +1,5 @@
 #include "compiler.hpp"
+#include "instructions_sets/system_instructions_sets.hpp"
 
 bool frontend_passes(char **file, uint32_t *size)
 {
