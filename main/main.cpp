@@ -16,7 +16,9 @@ int main(int argc, char *argv[])
             goto execution_error;
         printf("frontend passes: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
 
-        recreate_file((char *)"frontend_passes.log", compile_mw.firm_image.file, &compile_mw.firm_image.size);
+        // Вывод упрощенного файла
+        if (recreate_file((char *)"frontend_passes.log", compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+            goto execution_error;
     }
     goto end_of_program;
 

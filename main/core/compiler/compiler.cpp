@@ -58,26 +58,7 @@ bool frontend_passes(char **file, uint32_t *size)
         // Завершаем строку и обновляем итоговый размер
         *dst = '\0';
         *size = (uint32_t)(dst - *file);
-
-        // Выводим результат в консоль
-        int lineNumber = 1;
-        if (*size > 0)
-        {
-            printf("[%03d] ", lineNumber++);
-            for (uint32_t j = 0; j < *size; j++)
-            {
-                putchar((*file)[j]);
-                if ((*file)[j] == '\n' && j + 1 < *size)
-                {
-                    printf("[%03d] ", lineNumber++);
-                }
-            }
-            if ((*file)[*size - 1] != '\n')
-            {
-                printf("\n");
-            }
-            return 1;
-        }
+        return *size;
     }
     return 0;
 }
