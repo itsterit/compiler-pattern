@@ -7,11 +7,11 @@
 typedef struct
 {
     char code_line[50];
+    uint32_t origin;
     InstructionDef instruction;
-    uint32_t instruction_execution_address;
 } ParsedFile_t;
 
 bool frontend_pass(char **file, uint32_t *size);
-bool analysis_pass(char *file, uint32_t *size);
+bool analysis_pass(char **file, uint32_t *size);
 
 #endif /* __COMPILER_HPP__ */

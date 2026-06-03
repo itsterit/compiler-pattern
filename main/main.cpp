@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
             goto execution_error;
 
         // Определение адресации
-        if (analysis_pass(compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+        if (analysis_pass(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
             goto execution_error;
         printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
     }

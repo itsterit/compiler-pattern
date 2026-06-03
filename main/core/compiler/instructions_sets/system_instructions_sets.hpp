@@ -197,5 +197,6 @@ static const InstructionDef instruction_table[] =
             .operands = {{OPERAND_REG, 9, 0}},
         },
 };
+static const size_t instruction_table_size = (sizeof(instruction_table) / sizeof(instruction_table[0]));
 
 #endif /* __SYSTEM_INSTRUCTIONS_SETS_HPP_ */
