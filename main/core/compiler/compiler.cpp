@@ -15,11 +15,14 @@ bool frontend_pass(char **file, uint32_t *size)
 
         while (char_cnt <= totalSize)
         {
-            // Ищем конец текущей строки (символ '\n' или конец файла '\0')
             if (src[char_cnt] == '\n' || src[char_cnt] == '\0')
             {
-                char nextChar = src[char_cnt], *codeEnd = NULL;
-                int hasCode = 0, insideComment = 0;
+                char nextChar = src[char_cnt];
+                char *codeStart = NULL;
+                char *codeEnd = NULL;
+                int insideComment = 0;
+
+                // Ищем начало кода (без пробелов) и его конец (до комментария)
                 for (char *p = lineStart; p < &src[char_cnt]; p++)
                 {
                     if (*p == ';')
@@ -30,15 +33,19 @@ bool frontend_pass(char **file, uint32_t *size)
                     {
                         if (!isspace((unsigned char)*p))
                         {
-                            hasCode = 1;
+                            if (codeStart == NULL)
+                            {
+                                codeStart = p; // Запоминаем первый не-пробельный символ
+                            }
                             codeEnd = p + 1;
                         }
                     }
                 }
 
-                if (hasCode && codeEnd != NULL)
+                // Если в строке есть полезный код, копируем его
+                if (codeStart != NULL && codeEnd != NULL)
                 {
-                    for (char *p = lineStart; p < codeEnd; p++)
+                    for (char *p = codeStart; p < codeEnd; p++)
                     {
                         *dst++ = (char)toupper((unsigned char)*p);
                     }
@@ -59,9 +66,9 @@ bool frontend_pass(char **file, uint32_t *size)
 
         *dst = '\0';
         *size = (uint32_t)(dst - *file);
-        return *size;
+        return *size > 0; // Возвращаем true, если файл не пустой
     }
-    return 0;
+    return false;
 }
 
 bool analysis_pass(char **file, uint32_t *size)
