@@ -121,26 +121,19 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         char *text = parsed_file[i].code_line;
         uint32_t origin_val = 0;
 
-        // Присваиваем текущий адрес строке сразу
         parsed_file[i].origin = current_address;
-
-        // 1. Проверка на ORIGIN
         if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
         {
             current_address = origin_val;
             parsed_file[i].origin = current_address;
             continue;
         }
-
-        // 2. Проверка на МЕТКУ (наличие двоеточия)
         if (strchr(text, ':') != NULL)
         {
             continue;
         }
 
-        // 3. ИНСТРУКЦИЯ: Ищем её в таблице для определения оригинального размера
         uint8_t actual_size = 0;
-
         for (size_t j = 0; j < table_size; j++)
         {
             size_t mnem_len = strlen(inst_table[j].mnemonic);
@@ -150,27 +143,22 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
                 (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
             {
                 actual_size = inst_table[j].instr_size_bytes;
-                break; // Инструкция найдена, выходим из внутреннего цикла
+                break;
             }
         }
 
-        // 4. Применяем логику смещения на основе размерности
         if (actual_size == 2)
         {
-            // Если инструкция 2-байтная, по вашему условию ВСЕГДА разворачиваем в 4 байта
-            current_address += 4;
+            current_address += 2;
         }
         else if (actual_size == 4)
         {
-            // Если она уже 4-байтная, просто смещаем на 4 байта
             current_address += 4;
         }
         else
         {
-            // Логика по умолчанию на случай, если инструкция не найдена в таблице
-            // или имеет какой-то другой непредусмотренный размер (например, 0)
             fprintf(stderr, "warning: undefined instruction at line %d: %s\n", i + 1, text);
-            current_address += 4; // Либо вы можете убрать это смещение, если это критическая ошибка
+            current_address += 4;
         }
     }
 }
