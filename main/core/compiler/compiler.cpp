@@ -71,7 +71,7 @@ bool frontend_pass(char **file, uint32_t *size)
     return false;
 }
 
-bool analysis_pass(char **file, uint32_t *size)
+bool analysis_pass(char **file, uint32_t *size, ParsedFile_t **instructions, uint32_t *instructions_amount)
 {
     if ((file != NULL && *file != NULL) && (size != NULL && *size))
     {
@@ -98,12 +98,23 @@ bool analysis_pass(char **file, uint32_t *size)
 
             _calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
 
-            // _calculate_instructions_addresses(parsed_file, line_cnt);
-            for (current_line = 0; current_line <= line_cnt; current_line++)
-                printf("origin:=%4d   %s\n\r", parsed_file[current_line].origin, parsed_file[current_line].code_line);
-
-            return (current_line == line_cnt);
+            *instructions = parsed_file;
+            *instructions_amount = line_cnt;
+            return (true);
         }
+    }
+    return false;
+}
+
+bool backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount)
+{
+    if (instructions && instructions_amount)
+    {
+        for (int cnt = 0; instructions_amount >= cnt; cnt++)
+        {
+            printf("%s\n\r", instructions[cnt].code_line);
+        }
+        return 1;
     }
     return false;
 }

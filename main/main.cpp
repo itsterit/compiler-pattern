@@ -1,4 +1,4 @@
-#include "main.hpp"
+#include "config.hpp"
 
 compilation_middleware_type compile_mw;
 int main(int argc, char *argv[])
@@ -21,9 +21,13 @@ int main(int argc, char *argv[])
             goto execution_error;
 
         // Определение адресации
-        if (analysis_pass(&compile_mw.firm_image.file, &compile_mw.firm_image.size) == false)
+        if (analysis_pass(&compile_mw.firm_image.file, &compile_mw.firm_image.size, &compile_mw.preexecutable.instructions, &compile_mw.preexecutable.instructions_amount) == false)
             goto execution_error;
-        printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
+        printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.preexecutable.instructions_amount);
+
+        if (backend_pass(compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount) == false)
+            goto execution_error;
+        printf("done...\n\r");
     }
     goto end_of_program;
 
