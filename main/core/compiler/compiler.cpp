@@ -76,7 +76,7 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
 {
     if (file && size)
     {
-        uint32_t line_cnt = 0;
+        uint32_t line_cnt = 1;
         for (uint32_t char_cnt = 0; char_cnt < size; char_cnt++)
             if (file[char_cnt] == '\n' || file[char_cnt] == '\r')
                 line_cnt++;
@@ -232,7 +232,7 @@ void save_assembly_listing(const char *filename, ParsedFile_t *instructions, uin
 void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size)
 {
     uint32_t current_address = 0;
-    for (uint32_t i = 0; i < line_cnt; i++)
+    for (uint32_t i = 1; i < line_cnt; i++)
     {
         uint32_t origin_val = 0;
         char *text = parsed_file[i].code_line;

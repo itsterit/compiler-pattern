@@ -97,8 +97,85 @@ static uint32_t encode_func__add(uint32_t base_op, void *parsed_asm_args)
 
 static uint32_t encode_func__sub(uint32_t base_op, void *parsed_asm_args)
 {
-    return base_op;
+    if (parsed_asm_args == NULL)
+    {
+        return base_op;
+    }
+
+    ParsedAsmArgs_t *asm_args = (ParsedAsmArgs_t *)parsed_asm_args;
+
+    // Защита: для SUB нужно как минимум 2 операнда
+    if (asm_args->count < 2)
+    {
+        return base_op;
+    }
+
+    AsmArg_t *rd_arg = &asm_args->args[0]; // Регистр назначения (Rd)
+
+    if (rd_arg->type != OPERAND_REG)
+    {
+        return base_op;
+    }
+
+    uint32_t rd = rd_arg->value & 0x7; // 16-битные Thumb инструкции работают с Low-регистрами R0-R7
+    uint32_t result_opcode = base_op;
+
+    // ВАРИАНТ 1: Вычитание константы (SUB Rd, Rn, #imm3 или SUB Rd, #imm8)
+    if (asm_args->args[asm_args->count - 1].type == OPERAND_IMM)
+    {
+        uint32_t imm = asm_args->args[asm_args->count - 1].value;
+
+        if (asm_args->count == 3)
+        {
+            // Формат: SUB Rd, Rn, #imm3 (Encoding T1)
+            // Битовая маска: 0001 111 [imm3:3] [Rn:3] [Rd:3]
+            uint32_t rn = asm_args->args[1].value & 0x7;
+
+            result_opcode = 0x1E00; // Базовый опкод для 3-битного imm
+            result_opcode |= ((imm & 0x7) << 6);
+            result_opcode |= (rn << 3);
+            result_opcode |= rd;
+        }
+        else if (asm_args->count == 2)
+        {
+            // Формат: SUB Rd, #imm8 (Encoding T2)
+            // Битовая маска: 0011 1 [Rd:3] [imm8:8]
+            // (В данном случае вычитание происходит из самого Rd)
+            result_opcode = 0x3800; // Базовый опкод для 8-битного imm
+            result_opcode |= (rd << 8);
+            result_opcode |= (imm & 0xFF);
+        }
+    }
+    // ВАРИАНТ 2: Вычитание регистров (SUB Rd, Rn, Rm)
+    else if (asm_args->args[asm_args->count - 1].type == OPERAND_REG)
+    {
+        if (asm_args->count == 3)
+        {
+            // Формат: SUB Rd, Rn, Rm (Encoding T1)
+            // Битовая маска: 0001 101 [Rm:3] [Rn:3] [Rd:3]
+            uint32_t rn = asm_args->args[1].value & 0x7;
+            uint32_t rm = asm_args->args[2].value & 0x7;
+
+            result_opcode = 0x1A00; // Базовый опкод для SUB регистров
+            result_opcode |= (rm << 6);
+            result_opcode |= (rn << 3);
+            result_opcode |= rd;
+        }
+        else if (asm_args->count == 2)
+        {
+            // Если написано SUB R1, R2 -> превращаем в SUB R1, R1, R2
+            uint32_t rm = asm_args->args[1].value & 0x7;
+
+            result_opcode = 0x1A00;
+            result_opcode |= (rm << 6);
+            result_opcode |= (rd << 3); // Rn равен Rd
+            result_opcode |= rd;
+        }
+    }
+
+    return result_opcode;
 }
+
 static uint32_t encode_func__mul(uint32_t base_op, void *parsed_asm_args)
 {
     return base_op;
