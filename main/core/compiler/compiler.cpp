@@ -105,119 +105,117 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
 
 void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, InstructionDef *inst_table, size_t table_size)
 {
-    // if (!instructions || instructions_amount == 0 || !inst_table)
-    //     return;
+    if (instructions && instructions_amount && inst_table && table_size)
+    {
+        // 1. Определение точного размера бинарного образа
+        uint32_t max_address = 0;
+        for (uint32_t i = 0; i < instructions_amount; i++)
+        {
+            char *text = instructions[i].code_line;
+            if (strncmp(text, "ORIGIN", 6) == 0 || strchr(text, ':') != NULL)
+                continue;
 
-    // // 1. Определение точного размера бинарного образа
-    // uint32_t max_address = 0;
-    // for (uint32_t i = 0; i < instructions_amount; i++)
-    // {
-    //     char *text = instructions[i].code_line;
-    //     if (strncmp(text, "ORIGIN", 6) == 0 || strchr(text, ':') != NULL)
-    //     {
-    //         continue;
-    //     }
+            char mnem[16] = {0};
+            uint8_t size_bytes = 4;
+            sscanf(text, "%15s", mnem);
+            for (size_t j = 0; j < table_size; j++)
+            {
+                if (strcmp(mnem, inst_table[j].mnemonic) == 0)
+                {
+                    size_bytes = inst_table[j].instr_size_bytes;
+                    break;
+                }
+            }
 
-    //     char mnem[16] = {0};
-    //     uint8_t size_bytes = 0;
-    //     sscanf(text, "%15s", mnem);
-    //     for (size_t j = 0; j < table_size; j++)
-    //     {
-    //         if (strcmp(mnem, inst_table[j].mnemonic) == 0)
-    //         {
-    //             size_bytes = inst_table[j].instr_size_bytes;
-    //             break;
-    //         }
-    //     }
+            if (instructions[i].origin + size_bytes > max_address)
+            {
+                max_address = instructions[i].origin + size_bytes;
+            }
+        }
 
-    //     if (size_bytes == 0)
-    //         size_bytes = 4;
-    //     if (instructions[i].origin + size_bytes > max_address)
-    //     {
-    //         max_address = instructions[i].origin + size_bytes;
-    //     }
-    // }
+        // 2. Выделение памяти под образ
+        uint8_t *binary_image = (uint8_t *)malloc(max_address);
+        if (binary_image)
+        {
+            memset(binary_image, 0xFF, max_address);
+            {
+            }
+            // Сохранение бинарного образа
+            FILE *f_out = fopen("firmware.bin", "wb");
+            if (f_out)
+            {
+                fwrite(binary_image, 1, max_address, f_out);
+                fclose(f_out);
+                printf("compile complete: %u байт.\n", max_address);
+            }
+            free(binary_image);
+        }
 
-    // // 2. Выделение памяти под образ
-    // uint8_t *binary_image = (uint8_t *)malloc(max_address);
-    // if (!binary_image)
-    //     return;
-    // memset(binary_image, 0xFF, max_address);
+        // // 3. Проход генерации машинного кода
+        // for (uint32_t i = 0; i < instructions_amount; i++)
+        // {
+        //     char *text = instructions[i].code_line;
+        //     if (strncmp(text, "ORIGIN", 6) == 0 || strchr(text, ':') != NULL)
+        //     {
+        //         continue;
+        //     }
 
-    // // 3. Проход генерации машинного кода
-    // for (uint32_t i = 0; i < instructions_amount; i++)
-    // {
-    //     char *text = instructions[i].code_line;
-    //     if (strncmp(text, "ORIGIN", 6) == 0 || strchr(text, ':') != NULL)
-    //     {
-    //         continue;
-    //     }
+        //     char mnem[16] = {0};
+        //     sscanf(text, "%15s", mnem);
+        //     const InstructionDef *def = NULL;
+        //     for (size_t j = 0; j < table_size; j++)
+        //     {
+        //         if (strcmp(mnem, inst_table[j].mnemonic) == 0)
+        //         {
+        //             def = &inst_table[j];
+        //             break;
+        //         }
+        //     }
+        //     if (!def)
+        //     {
+        //         fprintf(stderr, "Error: Unknown mnemonic %s at %d\n", mnem, i + 1);
+        //         continue;
+        //     }
 
-    //     char mnem[16] = {0};
-    //     sscanf(text, "%15s", mnem);
-    //     const InstructionDef *def = NULL;
-    //     for (size_t j = 0; j < table_size; j++)
-    //     {
-    //         if (strcmp(mnem, inst_table[j].mnemonic) == 0)
-    //         {
-    //             def = &inst_table[j];
-    //             break;
-    //         }
-    //     }
-    //     if (!def)
-    //     {
-    //         fprintf(stderr, "Error: Unknown mnemonic %s at %d\n", mnem, i + 1);
-    //         continue;
-    //     }
+        //     const char *operands_ptr = text + strlen(mnem);
+        //     ParsedAsmArgs_t parsed_args;
+        //     parse_line_operands(operands_ptr, &parsed_args, instructions, instructions_amount);
 
-    //     const char *operands_ptr = text + strlen(mnem);
-    //     ParsedAsmArgs_t parsed_args;
-    //     parse_line_operands(operands_ptr, &parsed_args, instructions, instructions_amount);
+        //     if (parsed_args.count < def->min_operands || parsed_args.count > def->max_operands)
+        //     {
+        //         fprintf(stderr, "Ошибка: Неверное количество операндов для %s на строке %d\n", mnem, i + 1);
+        //         continue;
+        //     }
 
-    //     if (parsed_args.count < def->min_operands || parsed_args.count > def->max_operands)
-    //     {
-    //         fprintf(stderr, "Ошибка: Неверное количество операндов для %s на строке %d\n", mnem, i + 1);
-    //         continue;
-    //     }
+        //     // 4. ВЫЗОВ ЭНКОДЕРА
+        //     uint32_t machine_code = def->base_opcode;
+        //     if (def->encode_func != NULL)
+        //     {
+        //         machine_code = def->encode_func(def->base_opcode, &parsed_args);
+        //     }
 
-    //     // 4. ВЫЗОВ ЭНКОДЕРА
-    //     uint32_t machine_code = def->base_opcode;
-    //     if (def->encode_func != NULL)
-    //     {
-    //         machine_code = def->encode_func(def->base_opcode, &parsed_args);
-    //     }
+        //     // Накладываем маску операции
+        //     machine_code = (machine_code & ~def->opcode_mask) | (def->base_opcode & def->opcode_mask);
 
-    //     // Накладываем маску операции
-    //     machine_code = (machine_code & ~def->opcode_mask) | (def->base_opcode & def->opcode_mask);
+        //     // 5. ПОБАЙТОВАЯ ЗАПИСЬ С УЧЕТОМ РЕАЛЬНОГО РАЗМЕРА ИНСТРУКЦИИ
+        //     uint32_t write_pos = instructions[i].origin;
 
-    //     // 5. ПОБАЙТОВАЯ ЗАПИСЬ С УЧЕТОМ РЕАЛЬНОГО РАЗМЕРА ИНСТРУКЦИИ
-    //     uint32_t write_pos = instructions[i].origin;
-
-    //     if (def->instr_size_bytes == 2)
-    //     {
-    //         // Записываем только 2 байта (16 бит)
-    //         binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
-    //         binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
-    //     }
-    //     else if (def->instr_size_bytes == 4)
-    //     {
-    //         // Записываем все 4 байта (32 бита)
-    //         binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
-    //         binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
-    //         binary_image[write_pos + 2] = (machine_code >> 16) & 0xFF;
-    //         binary_image[write_pos + 3] = (machine_code >> 24) & 0xFF;
-    //     }
-    // }
-
-    // // Сохранение бинарного образа
-    // FILE *f_out = fopen("firmware.bin", "wb");
-    // if (f_out)
-    // {
-    //     fwrite(binary_image, 1, max_address, f_out);
-    //     fclose(f_out);
-    //     printf("Образ успешно сохранен. Итоговый размер: %u байт.\n", max_address);
-    // }
-    // free(binary_image);
+        //     if (def->instr_size_bytes == 2)
+        //     {
+        //         // Записываем только 2 байта (16 бит)
+        //         binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
+        //         binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
+        //     }
+        //     else if (def->instr_size_bytes == 4)
+        //     {
+        //         // Записываем все 4 байта (32 бита)
+        //         binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
+        //         binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
+        //         binary_image[write_pos + 2] = (machine_code >> 16) & 0xFF;
+        //         binary_image[write_pos + 3] = (machine_code >> 24) & 0xFF;
+        //     }
+        // }
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

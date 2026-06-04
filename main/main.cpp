@@ -23,7 +23,7 @@ int main(int argc, char *argv[])
         save_assembly_listing((char *)"analysis_pass.lst", compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount);
         free(compile_mw.firm_image.file);
 
-        // backend_pass(compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount, (InstructionDef *)&instruction_table, instruction_table_size);
+        backend_pass(compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount, (InstructionDef *)&instruction_table, instruction_table_size);
         printf("done...\n\r");
     }
     goto end_of_program;
