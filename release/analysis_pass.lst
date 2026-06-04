@@ -1,8 +1,1 @@
 0x00000000	MOV             W1,             TBLPAG
-0x00000002	MOV             #0X4042,        W0
-0x00000004	MOV             W0,             NVMCON
-0x00000010	ORIGIN 0X10
-0x00000010	MOV             #0X55,          W0
-0x00000012	MOV             W0,             NVMKEY
-0x00000014	MOV             #0XAA,          W0
-0x00000016	MOVQ             W0,             NVMKEY

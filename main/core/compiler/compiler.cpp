@@ -1,19 +1,6 @@
 #include "compiler.hpp"
 
 void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size);
-
-// Промежуточная структура для аргументов одной строки ассемблера
-typedef struct
-{
-    OperandType type;
-    uint32_t value;
-    int32_t offset;
-} AsmArg_t;
-typedef struct
-{
-    AsmArg_t args[4];
-    uint8_t count;
-} ParsedAsmArgs_t;
 void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, ParsedFile_t *instructions, uint32_t amount);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
