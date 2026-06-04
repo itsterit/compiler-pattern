@@ -290,6 +290,65 @@ static uint32_t encode_func__str(uint32_t base_op, void *parsed_asm_args)
 }
 
 /// BRANCHES & COMPARISONS
+// page190: A6.7.21 CBNZ, CBZ
+static uint32_t encode_func__cbz(uint32_t base_op, void *parsed_asm_args)
+{
+    if (parsed_asm_args == NULL)
+    {
+        return base_op;
+    }
+
+    ParsedAsmArgs_t *asm_args = (ParsedAsmArgs_t *)parsed_asm_args;
+
+    // Защита: CBZ строго требует 2 операнда (Регистр и Метка)
+    if (asm_args->count != 2)
+    {
+        return base_op;
+    }
+
+    AsmArg_t *rn_arg = &asm_args->args[0];    // Проверяемый регистр
+    AsmArg_t *label_arg = &asm_args->args[1]; // Целевая метка
+
+    // Валидация типов аргументов
+    if (rn_arg->type != OPERAND_REG || label_arg->type != OPERAND_LABEL)
+    {
+        return base_op;
+    }
+
+    uint32_t rn = rn_arg->value & 0x7; // CBZ работает только с регистрами R0-R7
+    uint32_t result_opcode = 0xB100;   // Базовый опкод CBZ (1011 0001 0000 0000)
+
+    // Вычисляем смещение.
+    // В ARM Cortex значение PC всегда на 4 байта впереди текущей инструкции.
+    // label_arg->value хранит абсолютный origin метки.
+    // Нам также нужен текущий адрес (передайте его через label_arg->offset из backend_pass)
+    // Допустим: label_arg->offset = label_absolute_address - (current_instruction_address + 4);
+    int32_t byte_offset = label_arg->offset;
+
+    // Смещение должно быть положительным (вперед) и не превышать 126 байт для CBZ
+    if (byte_offset > 0 && byte_offset <= 126)
+    {
+        // Так как переходы выровнены по полуслову, делим смещение на 2
+        uint32_t imm6 = (uint32_t)(byte_offset >> 1);
+
+        uint32_t imm5 = imm6 & 0x1F;      // Младшие 5 бит смещения
+        uint32_t i_bit = (imm6 >> 5) & 1; // 6-й (старший) бит смещения
+
+        // Собираем инструкцию по спецификации ARM Thumb
+        result_opcode |= rn;           // Биты [2:0] -> регистр Rn
+        result_opcode |= (imm5 << 3);  // Биты [7:3] -> imm5
+        result_opcode |= (i_bit << 9); // Бит [9]    -> i-bit
+    }
+    else
+    {
+        // Если смещение отрицательное или слишком большое, CBZ использовать нельзя.
+        // В реальном ассемблере здесь генерируется ошибка или подменяется на CMP + BNE
+        fprintf(stderr, "Error: Offset for CBZ is out of range (0-126 bytes)\n");
+    }
+
+    return result_opcode;
+}
+
 static uint32_t encode_func__cmp(uint32_t base_op, void *parsed_asm_args)
 {
     return base_op;

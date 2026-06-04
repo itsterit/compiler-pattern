@@ -173,6 +173,25 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                         continue;
                     }
 
+                    // ==========================================
+                    // ВСТАВКА: Расчет PC-relative смещения для меток
+                    // ==========================================
+                    for (uint8_t arg_idx = 0; arg_idx < parsed_args.count; arg_idx++)
+                    {
+                        if (parsed_args.args[arg_idx].type == OPERAND_LABEL)
+                        {
+                            // В архитектуре ARM Cortex-M3 (Thumb-2) значение программного счетчика (PC)
+                            // всегда опережает текущую инструкцию ровно на 4 байта
+                            uint32_t current_pc = instructions[i].origin + 4;
+
+                            // В поле .value лежит абсолютный адрес назначения (origin метки)
+                            uint32_t target_address = parsed_args.args[arg_idx].value;
+
+                            // Записываем относительное смещение в байтах в поле .offset
+                            parsed_args.args[arg_idx].offset = (int32_t)(target_address - current_pc);
+                        }
+                    }
+
                     uint32_t machine_code = def->base_opcode;
                     if (def->encode_func != NULL)
                     {

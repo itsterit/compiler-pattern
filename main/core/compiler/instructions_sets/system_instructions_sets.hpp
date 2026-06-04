@@ -190,6 +190,17 @@ static const InstructionDef instruction_table[] =
             .operands = {{OPERAND_REG, 4, 0}},
             .encode_func = encode_func__bx,
         },
+        {
+            // CBZ loop (16-бит) – Сравнение с нулем и относительный переход вперед
+            .mnemonic = "CBZ",
+            .base_opcode = 0xB100,
+            .opcode_mask = 0xFD00,
+            .instr_size_bytes = 2,
+            .min_operands = 2,
+            .max_operands = 2,
+            .operands = {{OPERAND_REG, 3, 0}, {OPERAND_LABEL, 6, 0}},
+            .encode_func = encode_func__cbz,
+        },
 
         // РАБОТА СО СТЕКОМ (STACK OPERATIONS)
         {
