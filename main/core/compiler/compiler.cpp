@@ -76,9 +76,9 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
 {
     if (file && size)
     {
-        uint32_t line_cnt = 1;
+        uint32_t line_cnt = 0;
         for (uint32_t char_cnt = 0; char_cnt < size; char_cnt++)
-            if (file[char_cnt] == '\n')
+            if (file[char_cnt] == '\n' || file[char_cnt] == '\r')
                 line_cnt++;
 
         ParsedFile_t *parsed_file = (ParsedFile_t *)malloc(sizeof(ParsedFile_t) * line_cnt);
@@ -269,7 +269,7 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         }
         else
         {
-            fprintf(stderr, "[warning]: undefined instruction at line %d: %s\n", i + 1, text);
+            printf("[warning]: undefined instruction at line %d\n", i + 1);
             current_address += 4;
         }
     }
