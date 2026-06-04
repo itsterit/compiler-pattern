@@ -1,6 +1,7 @@
 #ifndef __SYSTEM_INSTRUCTIONS_SETS_HPP_
 #define __SYSTEM_INSTRUCTIONS_SETS_HPP_
 #include "instructions_definitions.hpp"
+#include "system_instructions_wrap.hpp"
 
 static const InstructionDef instruction_table[] =
     {
@@ -14,6 +15,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}},
+            .encode_func = encode_func__mov,
         },
         {
             // MOV R1, #255 (16-бит) — Загрузка 8-битной константы
@@ -24,6 +26,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 3, 0}, {OPERAND_IMM, 8, 0}},
+            .encode_func = encode_func__mov,
         },
         {
             // MOVW R1, #0xABCD (32-бит) — Загрузка 16-битной константы в нижнюю часть регистра
@@ -34,6 +37,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_IMM, 16, 0}},
+            .encode_func = encode_func__mov,
         },
 
         // АРИФМЕТИКА (ARITHMETIC)
@@ -46,6 +50,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}},
+            .encode_func = encode_func__add,
         },
         {
             // SUB R1, R2, #100 (32-бит) — Вычитание константы (до 12 бит)
@@ -56,6 +61,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_IMM, 12, 0}},
+            .encode_func = encode_func__sub,
         },
         {
             // MUL R1, R2, R3 (32-бит) — Умножение (в Cortex-M3/M4 всегда 32-битное)
@@ -66,6 +72,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}},
+            .encode_func = encode_func__mul,
         },
 
         // ЛОГИКА И СДВИГИ (LOGICAL & SHIFTS)
@@ -78,6 +85,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}},
+            .encode_func = encode_func__and,
         },
         {
             // ORR R1, R2, R3 (32-бит) — Побитовое ИЛИ
@@ -88,6 +96,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}},
+            .encode_func = encode_func__orr,
         },
         {
             // LSL R1, R2, #5 (32-бит) — Логический сдвиг влево на константу (до 5 бит)
@@ -98,6 +107,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_REG, 4, 0}, {OPERAND_IMM, 5, 0}},
+            .encode_func = encode_func__lsl,
         },
         {
             // LSR R1, R2, #5 (16-бит) — Логический сдвиг вправо на константу (заполнение нулями)
@@ -108,6 +118,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 3,
             .max_operands = 3,
             .operands = {{OPERAND_REG, 3, 0}, {OPERAND_REG, 3, 0}, {OPERAND_IMM, 5, 0}},
+            .encode_func = encode_func__lsr,
         },
 
         // РАБОТА С ПАМЯТЬЮ (LOAD/STORE)
@@ -120,6 +131,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 4, 0}, {OPERAND_MEM_OFFSET, 12, 0}},
+            .encode_func = encode_func__ldr,
         },
         {
             // STR R1, [R2] (16-бит) — Сохранение слова в память без смещения (базовый регистр)
@@ -130,6 +142,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 3, 0}, {OPERAND_MEM_REG, 3, 0}},
+            .encode_func = encode_func__str,
         },
 
         // ПЕРЕХОДЫ И СРАВНЕНИЯ (BRANCHES & COMPARISONS)
@@ -142,6 +155,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 2,
             .max_operands = 2,
             .operands = {{OPERAND_REG, 3, 0}, {OPERAND_REG, 3, 0}},
+            .encode_func = encode_func__cmp,
         },
         {
             // B loop (16-бит) — Безусловный относительный переход
@@ -152,6 +166,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 1,
             .max_operands = 1,
             .operands = {{OPERAND_LABEL, 11, 0}},
+            .encode_func = encode_func__b,
         },
         {
             // BL function (32-бит) — Вызов функции (Переход с сохранением ссылки в LR)
@@ -162,6 +177,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 1,
             .max_operands = 1,
             .operands = {{OPERAND_LABEL, 24, 0}},
+            .encode_func = encode_func__bl,
         },
         {
             // BX LR (16-бит) — Переход по адресу в регистре (обычно возврат из функции)
@@ -172,7 +188,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 1,
             .max_operands = 1,
             .operands = {{OPERAND_REG, 4, 0}},
-
+            .encode_func = encode_func__bx,
         },
 
         // РАБОТА СО СТЕКОМ (STACK OPERATIONS)
@@ -185,6 +201,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 1,
             .max_operands = 1,
             .operands = {{OPERAND_REG, 9, 0}},
+            .encode_func = encode_func__push,
         },
         {
             // POP {R4-R7, PC} (16-бит) — Восстановление регистров из стека (и возврат, если есть PC)
@@ -195,6 +212,7 @@ static const InstructionDef instruction_table[] =
             .min_operands = 1,
             .max_operands = 1,
             .operands = {{OPERAND_REG, 9, 0}},
+            .encode_func = encode_func__pop,
         },
 };
 static const size_t instruction_table_size = (sizeof(instruction_table) / sizeof(instruction_table[0]));

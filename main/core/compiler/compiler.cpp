@@ -185,15 +185,15 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                     uint32_t write_pos = instructions[i].origin;
                     if (def->instr_size_bytes == 2)
                     {
-                        binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
-                        binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
+                        binary_image[write_pos + 0] = (machine_code >> 0x0000) & 0xFF;
+                        binary_image[write_pos + 1] = (machine_code >> 0x0008) & 0xFF;
                     }
                     else if (def->instr_size_bytes == 4)
                     {
-                        binary_image[write_pos + 0] = (machine_code >> 0) & 0xFF;
-                        binary_image[write_pos + 1] = (machine_code >> 8) & 0xFF;
-                        binary_image[write_pos + 2] = (machine_code >> 16) & 0xFF;
-                        binary_image[write_pos + 3] = (machine_code >> 24) & 0xFF;
+                        binary_image[write_pos + 0] = (machine_code >> 0x0000) & 0xFF;
+                        binary_image[write_pos + 1] = (machine_code >> 0x0008) & 0xFF;
+                        binary_image[write_pos + 2] = (machine_code >> 0x0010) & 0xFF;
+                        binary_image[write_pos + 3] = (machine_code >> 0x0018) & 0xFF;
                     }
                 }
             }
