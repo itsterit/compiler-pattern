@@ -1,1 +1,1 @@
-    MOV             W1,             TBLPAG 
+ LDR R0, #7
