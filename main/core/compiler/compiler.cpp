@@ -2,6 +2,20 @@
 
 void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size);
 
+// Промежуточная структура для аргументов одной строки ассемблера
+typedef struct
+{
+    OperandType type;
+    uint32_t value;
+    int32_t offset;
+} AsmArg_t;
+typedef struct
+{
+    AsmArg_t args[4];
+    uint8_t count;
+} ParsedAsmArgs_t;
+void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, ParsedFile_t *instructions, uint32_t amount);
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////// PUBLIC FUNCTIONS /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -274,6 +288,78 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         {
             fprintf(stderr, "warning: undefined instruction at line %d: %s\n", i + 1, text);
             current_address += 4;
+        }
+    }
+}
+
+uint32_t find_label_address(ParsedFile_t *instructions, uint32_t amount, const char *label_name)
+{
+    for (uint32_t i = 0; i < amount; i++)
+    {
+        char *line = instructions[i].code_line;
+        if (strchr(line, ':') != NULL)
+        {
+            char temp_label[50] = {0};
+            sscanf(line, "%49[^:]", temp_label);
+            if (strcmp(temp_label, label_name) == 0)
+                return instructions[i].origin;
+        }
+    }
+    return 0xFFFFFFFF;
+}
+
+void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, ParsedFile_t *instructions, uint32_t amount)
+{
+    out_args->count = 0;
+    if (operands_str && *operands_str != '\0')
+    {
+        char buf[128];
+        strncpy(buf, operands_str, sizeof(buf) - 1);
+        buf[sizeof(buf) - 1] = '\0';
+
+        char *token = strtok(buf, ", \t\r\n");
+        while (token != NULL && out_args->count < 4)
+        {
+            AsmArg_t *arg = &out_args->args[out_args->count];
+
+            // 1. РЕГИСТР (например, R0, R15) или АДРЕС В РЕГИСТРЕ [R1]
+            if (token[0] == 'R' || (token[0] == '[' && token[1] == 'R'))
+            {
+                char *num_ptr = (token[0] == '[') ? &token[2] : &token[1];
+                arg->value = atoi(num_ptr);
+
+                if (strchr(token, ']'))
+                    arg->type = OPERAND_MEM_REG;
+                else if (token[0] == '[')
+                    arg->type = OPERAND_MEM_OFFSET;
+                else
+                    arg->type = OPERAND_REG;
+            }
+            // 2. СМЕЩЕНИЕ ИЛИ КОНСТАНТА (например, #4], #256)
+            else if (token[0] == '#')
+            {
+                int32_t val = (int32_t)strtol(&token[1], NULL, 0);
+                if (out_args->count > 0 && out_args->args[out_args->count - 1].type == OPERAND_MEM_OFFSET)
+                {
+                    out_args->args[out_args->count - 1].offset = val;
+                    token = strtok(NULL, ", \t\r\n");
+                    continue;
+                }
+                else
+                {
+                    arg->type = OPERAND_IMM;
+                    arg->value = (uint32_t)val;
+                }
+            }
+            // 3. МЕТКА (буквенное обозначение, не регистр)
+            else if (isalpha((unsigned char)token[0]))
+            {
+                arg->type = OPERAND_LABEL;
+                arg->value = find_label_address(instructions, amount, token);
+            }
+
+            out_args->count++;
+            token = strtok(NULL, ", \t\r\n");
         }
     }
 }
