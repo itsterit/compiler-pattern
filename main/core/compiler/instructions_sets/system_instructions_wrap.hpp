@@ -361,7 +361,64 @@ static uint32_t encode_func__b(uint32_t base_op, void *parsed_asm_args)
 
 static uint32_t encode_func__bl(uint32_t base_op, void *parsed_asm_args)
 {
-    return base_op;
+    if (parsed_asm_args == NULL)
+    {
+        return base_op;
+    }
+
+    ParsedAsmArgs_t *asm_args = (ParsedAsmArgs_t *)parsed_asm_args;
+
+    // Защита: BL строго требует 1 операнд (Метку)
+    if (asm_args->count != 1)
+    {
+        return base_op;
+    }
+
+    AsmArg_t *label_arg = &asm_args->args[0];
+
+    // Валидация типа аргумента
+    if (label_arg->type != OPERAND_LABEL)
+    {
+        return base_op;
+    }
+
+    // Получаем относительное смещение в байтах, которое мы рассчитали в backend_pass
+    int32_t byte_offset = label_arg->offset;
+
+    // Проверяем диапазон смещения для BL (допустимо +/- 16 Мбайт)
+    if (byte_offset < -16777216 || byte_offset > 16777214)
+    {
+        fprintf(stderr, "Ошибка: Смещение для BL выходит за допустимый диапазон (+/- 16 Мб)\n");
+        return base_op;
+    }
+
+    // Делим смещение на 2, так как младший бит всегда 0 (инструкции выровнены по полуслову)
+    int32_t imm24 = byte_offset >> 1;
+
+    // Вычленяем биты согласно спецификации ARM ARM (Thumb-2)
+    uint32_t S = (imm24 >> 22) & 0x1;  // Знаковый бит (бит 23 исходного смещения)
+    uint32_t I1 = (imm24 >> 21) & 0x1; // Бит 22 исходного смещения
+    uint32_t I2 = (imm24 >> 20) & 0x1; // Бит 21 исходного смещения
+
+    // Вычисляем биты J1 и J2 на основе знакового бита S
+    uint32_t J1 = (!I1) ^ S;
+    uint32_t J2 = (!I2) ^ S;
+
+    uint32_t imm10 = (imm24 >> 11) & 0x3FF; // Средние 10 бит смещения
+    uint32_t imm11 = imm24 & 0x7FF;         // Младшие 11 бит смещения
+
+    // Собираем первое (старшее) и второе (младшее) полуслово инструкции BL
+    // Базовая маска первого полуслова BL:  1111 0000 0000 0000 (0xF000)
+    // Базовая маска второго полуслова BL: 1111 1000 0000 0000 (0xF800) -> у вас в base_op может быть общая маска
+    uint32_t first_half = 0xF000 | (S << 10) | imm10;
+    uint32_t second_half = 0xF800 | (J1 << 13) | (J2 << 11) | imm11;
+
+    // Склеиваем результат в единое 32-битное слово.
+    // Обратите внимание: в памяти ARM Cortex-M3 (Little Endian) первым запишется first_half.
+    // Возвращаем склеенный опкод.
+    uint32_t result_opcode = (first_half << 16) | second_half;
+
+    return result_opcode;
 }
 
 static uint32_t encode_func__bx(uint32_t base_op, void *parsed_asm_args)
