@@ -6,7 +6,7 @@
 
 typedef struct
 {
-    char code_line[50];
+    char code_line[100];
     uint32_t origin;
     InstructionDef instruction;
 } ParsedFile_t;

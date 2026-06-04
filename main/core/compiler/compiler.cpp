@@ -75,7 +75,7 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
 {
     if (file && size)
     {
-        uint32_t line_cnt = 0;
+        uint32_t line_cnt = 1;
         for (uint32_t char_cnt = 0; char_cnt < size; char_cnt++)
             if (file[char_cnt] == '\n')
                 line_cnt++;
@@ -83,7 +83,6 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
         ParsedFile_t *parsed_file = (ParsedFile_t *)malloc(sizeof(ParsedFile_t) * line_cnt);
         if (line_cnt && parsed_file != NULL)
         {
-            // смотрим содержание файла, отделяем адресацию(origin и метки) от инструкций
             int current_line = 0;
             char *line = strtok(file, "\r\n");
             while (line != NULL && current_line < line_cnt)
@@ -246,12 +245,10 @@ void save_assembly_listing(const char *filename, ParsedFile_t *instructions, uin
 void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size)
 {
     uint32_t current_address = 0;
-
-    for (uint32_t i = 0; i <= line_cnt; i++)
+    for (uint32_t i = 0; i < line_cnt; i++)
     {
-        char *text = parsed_file[i].code_line;
         uint32_t origin_val = 0;
-
+        char *text = parsed_file[i].code_line;
         parsed_file[i].origin = current_address;
         if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
         {
@@ -268,10 +265,7 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         for (size_t j = 0; j < table_size; j++)
         {
             size_t mnem_len = strlen(inst_table[j].mnemonic);
-
-            // Сверяем начало строки с мнемоникой из таблицы (строго в UPPER CASE)
-            if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 &&
-                (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
+            if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 && (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
             {
                 actual_size = inst_table[j].instr_size_bytes;
                 break;

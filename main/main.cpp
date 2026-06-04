@@ -15,16 +15,14 @@ int main(int argc, char *argv[])
         if (frontend_pass(compile_mw.firm_image.file, compile_mw.firm_image.size) == false)
             goto execution_error;
         printf("frontend passes: %s(%d)\n\r", argv[1], compile_mw.firm_image.size);
-        recreate_file((char *)"frontend_pass.log", compile_mw.firm_image.file, &compile_mw.firm_image.size);
 
         // Определение адресации
         if (analysis_pass(compile_mw.firm_image.file, compile_mw.firm_image.size, &compile_mw.preexecutable.instructions, &compile_mw.preexecutable.instructions_amount) == false)
             goto execution_error;
+        printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.preexecutable.instructions_amount);
+        save_assembly_listing((char *)"analysis_pass.lst", compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount);
+        free(compile_mw.firm_image.file);
 
-        // free(compile_mw.firm_image.file);
-        // printf("analysis_pass: %s(%d)\n\r", argv[1], compile_mw.preexecutable.instructions_amount);
-        // save_assembly_listing((char *)"analysis_pass.lst", compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount);
-        //
         // backend_pass(compile_mw.preexecutable.instructions, compile_mw.preexecutable.instructions_amount, (InstructionDef *)&instruction_table, instruction_table_size);
         printf("done...\n\r");
     }
