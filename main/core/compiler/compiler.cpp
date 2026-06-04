@@ -179,7 +179,6 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                         machine_code = def->encode_func(def->base_opcode, &parsed_args);
                     }
 
-                    machine_code = (machine_code & ~def->opcode_mask) | (def->base_opcode & def->opcode_mask);
                     uint32_t write_pos = instructions[i].origin;
                     if (def->instr_size_bytes == 2)
                     {

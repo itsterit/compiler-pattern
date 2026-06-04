@@ -85,7 +85,6 @@ static uint32_t encode_func__mov(uint32_t base_op, void *parsed_asm_args)
             result_opcode = base_op;
         }
     }
-
     return result_opcode;
 }
 
