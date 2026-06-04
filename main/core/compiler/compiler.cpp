@@ -158,9 +158,7 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                 {
                     char *text = instructions[i].code_line;
                     if (strncmp(text, "ORIGIN", 6) == 0 || strchr(text, ':') != NULL)
-                    {
                         continue;
-                    }
 
                     char mnem[16] = {0};
                     sscanf(text, "%15s", mnem);
@@ -175,25 +173,24 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                     }
                     if (!def)
                     {
-                        fprintf(stderr, "Error: Unknown mnemonic %s at %d\n", mnem, i + 1);
+                        fprintf(stderr, "[Error]: Unknown mnemonic %s at %d\n", mnem, i + 1);
                         continue;
                     }
 
-                    // const char *operands_ptr = text + strlen(mnem);
-                    // ParsedAsmArgs_t parsed_args;
-                    // parse_line_operands(operands_ptr, &parsed_args, instructions, instructions_amount);
-
-                    // if (parsed_args.count < def->min_operands || parsed_args.count > def->max_operands)
-                    // {
-                    //     fprintf(stderr, "Ошибка: Неверное количество операндов для %s на строке %d\n", mnem, i + 1);
-                    //     continue;
-                    // }
+                    const char *operands_ptr = text + strlen(mnem);
+                    ParsedAsmArgs_t parsed_args;
+                    parse_line_operands(operands_ptr, &parsed_args, instructions, instructions_amount);
+                    if (parsed_args.count < def->min_operands || parsed_args.count > def->max_operands)
+                    {
+                        fprintf(stderr, "[Error]: Incorrect number of operants %s at %d\n", mnem, i + 1);
+                        continue;
+                    }
 
                     uint32_t machine_code = def->base_opcode;
-                    // if (def->encode_func != NULL)
-                    // {
-                    //     machine_code = def->encode_func(def->base_opcode, &parsed_args);
-                    // }
+                    if (def->encode_func != NULL)
+                    {
+                        machine_code = def->encode_func(def->base_opcode, &parsed_args);
+                    }
 
                     machine_code = (machine_code & ~def->opcode_mask) | (def->base_opcode & def->opcode_mask);
                     uint32_t write_pos = instructions[i].origin;
@@ -286,7 +283,7 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         }
         else
         {
-            fprintf(stderr, "warning: undefined instruction at line %d: %s\n", i + 1, text);
+            fprintf(stderr, "[warning]: undefined instruction at line %d: %s\n", i + 1, text);
             current_address += 4;
         }
     }

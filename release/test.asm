@@ -6,4 +6,4 @@ ORIGIN 0x10
     MOV             #0X55,          W0
     MOV             W0,             NVMKEY
     MOV             #0XAA,          W0
-    MOV             W0,             NVMKEY  
+    MOVq             W0,             NVMKEY  
