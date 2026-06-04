@@ -6,12 +6,12 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
 ///////////////////////////////////////////////////////// PUBLIC FUNCTIONS /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool frontend_pass(char **file, uint32_t *size)
+bool frontend_pass(char *file, uint32_t size)
 {
-    if (file != NULL && *file != NULL && size != NULL)
+    if (file && size)
     {
-        char *src = *file, *dst = *file, *lineStart = src;
-        uint32_t char_cnt = 0, totalSize = *size;
+        char *src = file, *dst = file, *lineStart = src;
+        uint32_t char_cnt = 0, totalSize = size;
 
         while (char_cnt <= totalSize)
         {
@@ -35,7 +35,7 @@ bool frontend_pass(char **file, uint32_t *size)
                         {
                             if (codeStart == NULL)
                             {
-                                codeStart = p; // Запоминаем первый не-пробельный символ
+                                codeStart = p;
                             }
                             codeEnd = p + 1;
                         }
@@ -65,20 +65,19 @@ bool frontend_pass(char **file, uint32_t *size)
         }
 
         *dst = '\0';
-        *size = (uint32_t)(dst - *file);
-        return *size > 0; // Возвращаем true, если файл не пустой
+        size = (uint32_t)(dst - file);
+        return size > 0;
     }
     return false;
 }
 
-bool analysis_pass(char **file, uint32_t *size, ParsedFile_t **instructions, uint32_t *instructions_amount)
+bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint32_t *instructions_amount)
 {
-    if ((file != NULL && *file != NULL) && (size != NULL && *size))
+    if (file && size)
     {
-        char *buffer = *file;
         uint32_t line_cnt = 0;
-        for (uint32_t char_cnt = 0; char_cnt < *size; char_cnt++)
-            if (buffer[char_cnt] == '\n')
+        for (uint32_t char_cnt = 0; char_cnt < size; char_cnt++)
+            if (file[char_cnt] == '\n')
                 line_cnt++;
 
         ParsedFile_t *parsed_file = (ParsedFile_t *)malloc(sizeof(ParsedFile_t) * line_cnt);
@@ -86,8 +85,8 @@ bool analysis_pass(char **file, uint32_t *size, ParsedFile_t **instructions, uin
         {
             // смотрим содержание файла, отделяем адресацию(origin и метки) от инструкций
             int current_line = 0;
-            char *line = strtok(buffer, "\r\n");
-            while (line != NULL && current_line <= line_cnt)
+            char *line = strtok(file, "\r\n");
+            while (line != NULL && current_line < line_cnt)
             {
                 strncpy(parsed_file[current_line].code_line, line, sizeof(parsed_file[current_line].code_line) - 1);
                 parsed_file[current_line].code_line[sizeof(parsed_file[current_line].code_line) - 1] = '\0';
@@ -97,7 +96,6 @@ bool analysis_pass(char **file, uint32_t *size, ParsedFile_t **instructions, uin
             }
 
             _calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
-
             *instructions = parsed_file;
             *instructions_amount = line_cnt;
             return (true);
