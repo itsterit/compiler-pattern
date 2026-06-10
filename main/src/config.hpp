@@ -18,6 +18,5 @@ typedef struct
     } preexecutable;
 
 } compilation_middleware_type;
-extern compilation_middleware_type compilation_middleware;
 
 #endif /* __CONFIG_H__ */

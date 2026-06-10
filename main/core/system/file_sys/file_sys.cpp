@@ -1,32 +1,25 @@
 #include "file_sys.hpp"
 
-/// @brief Read the file
-/// @param file_name name of the file afterward return interpreted file
-/// @param ret_file_size returned file size
-/// @return condition od reading file
 bool open_file(char **file_name, uint32_t *ret_file_size)
 {
-    FILE *file = fopen(*file_name, "rb");
-    size_t bytes_read, file_size;
-    char *tmp_file;
-
-    if (file != NULL && file_name && ret_file_size)
+    if (*file_name && file_name && ret_file_size)
     {
-        fseek(file, 0, SEEK_END);
-        file_size = ftell(file);
+        FILE *file = fopen(*file_name, "rb");
+        *file_name = NULL;
 
-        rewind(file);
-        tmp_file = (char *)malloc(sizeof(char) * (file_size + 1));
-        if (tmp_file != NULL)
+        if (file != NULL)
         {
-            bytes_read = fread(tmp_file, 1, file_size, file);
-            tmp_file[bytes_read] = '\0';
+            fseek(file, 0, SEEK_END);
+            *ret_file_size = ftell(file);
+            rewind(file);
+
+            *file_name = (char *)malloc(sizeof(char) * (*ret_file_size + 1));
+            if (*file_name != NULL)
             {
-                *file_name = tmp_file;
-                *ret_file_size = file_size;
+                size_t bytes_read = fread(*file_name, 1, *ret_file_size, file);
+                (*file_name)[bytes_read] = '\0', fclose(file);
+                return (*ret_file_size == bytes_read);
             }
-            fclose(file);
-            return (file_size == bytes_read);
         }
     }
     return 0;
