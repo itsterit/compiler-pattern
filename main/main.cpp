@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 
             EXECUTION_CHECK(!analysis_pass(selected_file_p, selected_file_size, &directives_set, &instructions_number));
             EXECUTION_CHECK(!save_assembly_listing((char *)"analysis_pass.log", directives_set, instructions_number));
-            printf("analysis_pass: %s(%4.d lines)\n\r", argv[1], instructions_number);
+            printf("analysis_pass: %s(%-4.d lines)\n\r", argv[1], instructions_number);
         }
         goto end_of_program;
 

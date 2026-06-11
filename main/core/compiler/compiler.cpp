@@ -1,6 +1,6 @@
 #include "compiler.hpp"
 
-void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size);
+void calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size);
 void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, ParsedFile_t *instructions, uint32_t amount);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -16,7 +16,8 @@ bool save_assembly_listing(const char *filename, ParsedFile_t *instructions, uin
         {
             for (uint32_t instruction_cnt = 0; instruction_cnt < instructions_amount; instruction_cnt++)
             {
-                fprintf(f_out, "origin:0x%08X\t instruction:0x%08X | %s\n", instructions[instruction_cnt].origin, instructions[instruction_cnt].instruction, instructions[instruction_cnt].code_line);
+                fprintf(f_out, "origin:0x%08X\t instruction:0x%08X | %s\n",
+                        instructions[instruction_cnt].origin, instructions[instruction_cnt].instruction.instruction, instructions[instruction_cnt].code_line);
             }
             fclose(f_out);
             return true;
@@ -104,7 +105,7 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
                 current_line++;
             }
 
-            // _calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
+            calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
             *instructions = parsed_file;
             *instructions_amount = line_cnt;
             return (true);
@@ -239,7 +240,7 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
 ////////////////////////////////////////////////////////// LOCAL FUNCTIONS /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size)
+void calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size)
 {
     uint32_t current_address = 0;
     for (uint32_t i = 0; i < line_cnt; i++)
@@ -247,40 +248,41 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
         uint32_t origin_val = 0;
         char *text = parsed_file[i].code_line;
         parsed_file[i].origin = current_address;
+        parsed_file[i].instruction.instruction = 0x00;
 
-        // if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
-        // {
-        //     current_address = origin_val;
-        //     parsed_file[i].origin = current_address;
-        //     continue;
-        // }
-        // if (strchr(text, ':') != NULL)
-        // {
-        //     continue;
-        // }
-        // uint8_t actual_size = 0;
-        // for (size_t j = 0; j < table_size; j++)
-        // {
-        //     size_t mnem_len = strlen(inst_table[j].mnemonic);
-        //     if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 && (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
-        //     {
-        //         actual_size = inst_table[j].instr_size_bytes;
-        //         break;
-        //     }
-        // }
-        // if (actual_size == 2)
-        // {
-        //     current_address += 2;
-        // }
-        // else if (actual_size == 4)
-        // {
-        //     current_address += 4;
-        // }
-        // else
-        // {
-        //     printf("[warning]: undefined instruction at line %d\n", i + 1);
-        //     current_address += 4;
-        // }
+        if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
+        {
+            current_address = origin_val;
+            parsed_file[i].origin = current_address;
+            continue;
+        }
+        if (strchr(text, ':') != NULL)
+        {
+            continue;
+        }
+        uint8_t actual_size = 0;
+        for (size_t j = 0; j < table_size; j++)
+        {
+            size_t mnem_len = strlen(inst_table[j].mnemonic);
+            if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 && (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
+            {
+                actual_size = inst_table[j].instr_size_bytes;
+                break;
+            }
+        }
+        if (actual_size == 2)
+        {
+            current_address += 2;
+        }
+        else if (actual_size == 4)
+        {
+            current_address += 4;
+        }
+        else
+        {
+            printf("[warning]: undefined instruction at line %d\n", i + 1);
+            current_address += 4;
+        }
     }
 }
 
