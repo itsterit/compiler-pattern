@@ -1,25 +1,25 @@
 #include "config.hpp"
 
-volatile char tmp_file[50] = {0};
-#define EXECUTION_CHECK(cond) \
-    if (cond)                 \
-    break
-
 int main(int argc, char *argv[])
 {
     volatile char *selected_file_p = argv[1];
     volatile uint32_t selected_file_size = 0;
+    volatile ParsedFile_t *directives_set = 0;
+    volatile uint32_t instructions_number = 0;
 
     while ((argc == 2) && (argv))
     {
         printf("\n\rstarting...\n\r");
         {
             EXECUTION_CHECK(!open_file((char **)&selected_file_p, (uint32_t *)&selected_file_size));
-            printf("selected file: %s(%d bytes)\n\r", argv[1], selected_file_size);
+            printf("selected file: %s(%4.d bytes)\n\r", argv[1], selected_file_size);
 
             EXECUTION_CHECK(!frontend_pass((char *)selected_file_p, (uint32_t *)&selected_file_size));
             EXECUTION_CHECK(!recreate_file((char *)"frontend_pass.log", (char *)selected_file_p, (uint32_t *)&selected_file_size));
-            printf("frontend pass: %s(%d bytes)\n\r", argv[1], selected_file_size);
+            printf("frontend pass: %s(%4.d bytes)\n\r", argv[1], selected_file_size);
+
+            EXECUTION_CHECK(!analysis_pass((char *)selected_file_p, selected_file_size, (ParsedFile_t **)&directives_set, (uint32_t *)&instructions_number));
+            printf("analysis_pass: %s(%4.d lines)\n\r", argv[1], instructions_number);
         }
         goto end_of_program;
 
@@ -40,6 +40,7 @@ int main(int argc, char *argv[])
 
 end_of_program:
     free((void *)selected_file_p);
+    free((void *)directives_set);
     getchar();
     return 0;
 }
