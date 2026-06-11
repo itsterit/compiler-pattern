@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
             EXECUTION_CHECK(!open_file((char **)&selected_file_p, (uint32_t *)&selected_file_size));
             printf("selected file: %s(%d bytes)\n\r", argv[1], selected_file_size);
 
-            EXECUTION_CHECK(!frontend_pass((char *)selected_file_p, selected_file_size));
+            EXECUTION_CHECK(!frontend_pass((char *)selected_file_p, (uint32_t *)&selected_file_size));
             EXECUTION_CHECK(!recreate_file((char *)"frontend_pass.log", (char *)selected_file_p, (uint32_t *)&selected_file_size));
             printf("frontend pass: %s(%d bytes)\n\r", argv[1], selected_file_size);
         }
