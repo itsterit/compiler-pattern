@@ -9,94 +9,53 @@ void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, Pa
 
 bool frontend_pass(char *file, uint32_t *size)
 {
-    // Проверка на корректность входных данных
-    if (!file || !size || *size == 0)
+    uint32_t write_idx = 0, read_idx = 0;
+    if (file && size && *size)
     {
-        return false;
-    }
-
-    uint32_t original_size = *size;
-    uint32_t write_idx = 0;
-    uint32_t read_idx = 0;
-
-    // Внешний цикл идет по всему файлу
-    while (read_idx < original_size)
-    {
-        uint32_t line_start_write = write_idx;
-        uint32_t last_non_space_write = write_idx;
-        bool has_content = false;
-        bool inside_comment = false;
-
-        // Внутренний цикл обрабатывает строго ОДНУ строку
+        uint32_t original_size = *size;
         while (read_idx < original_size)
         {
-            char c = file[read_idx++];
+            uint32_t line_start_write = write_idx, last_non_space_write = write_idx;
+            bool has_content = false, inside_comment = false;
 
-            // 1. Проверка на конец строки
-            if (c == '\n' || c == '\0')
+            while (read_idx < original_size)
             {
-                if (has_content)
+                char c = file[read_idx++];
+                if (c == '\n' || c == '\0')
                 {
-                    // Отрезаем лишние пробелы в конце полезного кода строки
-                    write_idx = last_non_space_write + 1;
-                    if (c == '\n')
+                    if (has_content)
                     {
-                        file[write_idx++] = '\n';
+                        write_idx = last_non_space_write + 1;
+                        if (c == '\n')
+                            file[write_idx++] = '\n';
                     }
+                    else
+                    {
+                        write_idx = line_start_write;
+                    }
+                    break;
                 }
-                else
+
+                if (c == ';')
+                    inside_comment = true;
+                if (inside_comment)
+                    continue;
+                if (!has_content && isspace((unsigned char)c))
+                    continue;
+
+                file[write_idx] = (char)toupper((unsigned char)c);
+                if (!isspace((unsigned char)file[write_idx]))
                 {
-                    // Строка пустая или из одних пробелов/комментариев — полностью удаляем её
-                    write_idx = line_start_write;
+                    last_non_space_write = write_idx;
+                    has_content = true;
                 }
-                break; // Переходим к следующей строке во внешнем цикле
+                write_idx++;
             }
-
-            // 2. Если мы внутри комментария — игнорируем символ
-            if (inside_comment)
-            {
-                continue;
-            }
-
-            // 3. Начало комментария — игнорируем всё до конца строки
-            if (c == ';')
-            {
-                inside_comment = true;
-                continue;
-            }
-
-            // 4. Пропускаем пробелы в самом начале строки
-            if (!has_content && isspace((unsigned char)c))
-            {
-                continue;
-            }
-
-            // 5. Записываем валидный символ в верхнем регистре
-            file[write_idx] = (char)toupper((unsigned char)c);
-
-            // Если это не пробел, фиксируем позицию последнего значащего символа
-            if (!isspace((unsigned char)file[write_idx]))
-            {
-                last_non_space_write = write_idx;
-                has_content = true;
-            }
-
-            write_idx++;
         }
+        *size = write_idx;
+        return (*size) > 0;
     }
-
-    // Записываем РЕАЛЬНЫЙ новый размер обработанных данных обратно в указатель
-    *size = write_idx;
-
-    // Безопасность: полностью зануляем весь оставшийся хвост буфера,
-    // чтобы в памяти не болтались куски старого кода
-    while (write_idx < original_size)
-    {
-        file[write_idx++] = '\0';
-    }
-
-    // Возвращаем true, если в файле остался хоть какой-то полезный код
-    return (*size) > 0;
+    return false;
 }
 
 bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint32_t *instructions_amount)
