@@ -19,7 +19,8 @@ int main(int argc, char *argv[])
             printf("frontend pass: %s(%4.d bytes)\n\r", argv[1], selected_file_size);
 
             EXECUTION_CHECK(!analysis_pass((char *)selected_file_p, selected_file_size, (ParsedFile_t **)&directives_set, (uint32_t *)&instructions_number));
-            printf("analysis_pass: %s(%4.d lines)\n\r", argv[1], instructions_number);
+            // EXECUTION_CHECK(!save_assembly_listing((char *)"analysis_pass.log", (ParsedFile_t *)&directives_set, instructions_number));
+            // printf("analysis_pass: %s(%4.d lines)\n\r", argv[1], instructions_number);
         }
         goto end_of_program;
 

@@ -4,6 +4,29 @@ void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_
 void parse_line_operands(const char *operands_str, ParsedAsmArgs_t *out_args, ParsedFile_t *instructions, uint32_t amount);
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////// lOGOUT FEATURES /////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+bool save_assembly_listing(const char *filename, ParsedFile_t *instructions, uint32_t instructions_amount)
+{
+    if (filename && instructions && instructions_amount)
+    {
+        FILE *f_out = fopen(filename, "wb");
+        if (f_out)
+        {
+            for (uint32_t i = 0; i < instructions_amount; i++)
+            {
+                printf("\n\r %d", instructions[i].origin);
+            }
+            // fprintf(f_out, "0x%08X\t%s\n", instructions[i].origin, instructions[i].code_line);
+            fclose(f_out);
+            return true;
+        }
+    }
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////// PUBLIC FUNCTIONS /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -52,6 +75,7 @@ bool frontend_pass(char *file, uint32_t *size)
                 write_idx++;
             }
         }
+        file[write_idx] = '\0';
         *size = write_idx;
         return (*size) > 0;
     }
@@ -76,7 +100,6 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
             {
                 strncpy(parsed_file[current_line].code_line, line, sizeof(parsed_file[current_line].code_line) - 1);
                 parsed_file[current_line].code_line[sizeof(parsed_file[current_line].code_line) - 1] = '\0';
-                parsed_file[current_line].origin = 0;
                 line = strtok(NULL, "\r\n");
                 current_line++;
             }
@@ -216,67 +239,48 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
 ////////////////////////////////////////////////////////// LOCAL FUNCTIONS /////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void save_assembly_listing(const char *filename, ParsedFile_t *instructions, uint32_t instructions_amount)
-{
-    if (filename && instructions && instructions_amount)
-    {
-        FILE *f_out = fopen(filename, "wb");
-        if (f_out)
-        {
-            for (uint32_t i = 0; i < instructions_amount; i++)
-            {
-                // Выводим адрес в 8-значном 16-ричном формате с ведущими нулями (например, 0x00004600)
-                // \t делает аккуратный отступ перед текстом инструкции
-                fprintf(f_out, "0x%08X\t%s\n", instructions[i].origin, instructions[i].code_line);
-            }
-            fclose(f_out);
-        }
-    }
-}
-
 void _calculate_instructions_addresses(ParsedFile_t *parsed_file, uint32_t line_cnt, const InstructionDef *inst_table, size_t table_size)
 {
     uint32_t current_address = 0;
-    for (uint32_t i = 1; i < line_cnt; i++)
+    for (uint32_t i = 0; i < line_cnt; i++)
     {
         uint32_t origin_val = 0;
         char *text = parsed_file[i].code_line;
         parsed_file[i].origin = current_address;
-        if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
-        {
-            current_address = origin_val;
-            parsed_file[i].origin = current_address;
-            continue;
-        }
-        if (strchr(text, ':') != NULL)
-        {
-            continue;
-        }
 
-        uint8_t actual_size = 0;
-        for (size_t j = 0; j < table_size; j++)
-        {
-            size_t mnem_len = strlen(inst_table[j].mnemonic);
-            if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 && (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
-            {
-                actual_size = inst_table[j].instr_size_bytes;
-                break;
-            }
-        }
-
-        if (actual_size == 2)
-        {
-            current_address += 2;
-        }
-        else if (actual_size == 4)
-        {
-            current_address += 4;
-        }
-        else
-        {
-            printf("[warning]: undefined instruction at line %d\n", i + 1);
-            current_address += 4;
-        }
+        // if (sscanf(text, "ORIGIN %i", &origin_val) == 1)
+        // {
+        //     current_address = origin_val;
+        //     parsed_file[i].origin = current_address;
+        //     continue;
+        // }
+        // if (strchr(text, ':') != NULL)
+        // {
+        //     continue;
+        // }
+        // uint8_t actual_size = 0;
+        // for (size_t j = 0; j < table_size; j++)
+        // {
+        //     size_t mnem_len = strlen(inst_table[j].mnemonic);
+        //     if (strncmp(text, inst_table[j].mnemonic, mnem_len) == 0 && (text[mnem_len] == ' ' || text[mnem_len] == '\t' || text[mnem_len] == '\0' || text[mnem_len] == '\r' || text[mnem_len] == '\n'))
+        //     {
+        //         actual_size = inst_table[j].instr_size_bytes;
+        //         break;
+        //     }
+        // }
+        // if (actual_size == 2)
+        // {
+        //     current_address += 2;
+        // }
+        // else if (actual_size == 4)
+        // {
+        //     current_address += 4;
+        // }
+        // else
+        // {
+        //     printf("[warning]: undefined instruction at line %d\n", i + 1);
+        //     current_address += 4;
+        // }
     }
 }
 
