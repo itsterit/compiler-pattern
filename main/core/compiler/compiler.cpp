@@ -14,11 +14,10 @@ bool save_assembly_listing(const char *filename, ParsedFile_t *instructions, uin
         FILE *f_out = fopen(filename, "wb");
         if (f_out)
         {
-            for (uint32_t i = 0; i < instructions_amount; i++)
+            for (uint32_t instruction_cnt = 0; instruction_cnt < instructions_amount; instruction_cnt++)
             {
-                printf("\n\r %d", instructions[i].origin);
+                fprintf(f_out, "origin:0x%08X\t instruction:0x%08X | %s\n", instructions[instruction_cnt].origin, instructions[instruction_cnt].instruction, instructions[instruction_cnt].code_line);
             }
-            // fprintf(f_out, "0x%08X\t%s\n", instructions[i].origin, instructions[i].code_line);
             fclose(f_out);
             return true;
         }
@@ -99,12 +98,13 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
             while (line != NULL && current_line < line_cnt)
             {
                 strncpy(parsed_file[current_line].code_line, line, sizeof(parsed_file[current_line].code_line) - 1);
+                parsed_file[current_line].code_line[sizeof(parsed_file[current_line].code_line) - 2] = '\n';
                 parsed_file[current_line].code_line[sizeof(parsed_file[current_line].code_line) - 1] = '\0';
                 line = strtok(NULL, "\r\n");
                 current_line++;
             }
 
-            _calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
+            // _calculate_instructions_addresses(parsed_file, line_cnt, (InstructionDef *)&instruction_table, instruction_table_size);
             *instructions = parsed_file;
             *instructions_amount = line_cnt;
             return (true);

@@ -37,6 +37,7 @@ typedef struct
 
     // Указатель на функцию-обработчик (энкодер) для финальной сборки байт
     uint32_t (*encode_func)(uint32_t base_op, void *parsed_asm_args);
+    uint64_t instruction;
 } InstructionDef;
 
 #endif /* __INSTRUCTIONS_SETS__ _HPP*/
