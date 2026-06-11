@@ -114,7 +114,7 @@ bool analysis_pass(char *file, uint32_t size, ParsedFile_t **instructions, uint3
     return false;
 }
 
-void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, InstructionDef *inst_table, size_t table_size)
+bool backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, InstructionDef *inst_table, size_t table_size)
 {
     if (instructions && instructions_amount && inst_table && table_size)
     {
@@ -207,6 +207,7 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
                     {
                         machine_code = def->encode_func(def->base_opcode, &parsed_args);
                     }
+                    instructions[i].instruction.instruction = machine_code;
 
                     uint32_t write_pos = instructions[i].origin;
                     if (def->instr_size_bytes == 2)
@@ -234,6 +235,7 @@ void backend_pass(ParsedFile_t *instructions, uint32_t instructions_amount, Inst
             free(binary_image);
         }
     }
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,0 +1,11 @@
+origin:0x00000010	 instruction:0x00000000 | ORIGIN 0X0010
+origin:0x00000010	 instruction:0x00000000 | INITIALIZATION:
+origin:0x00000010	 instruction:0x0000200A | MOV R0, #10
+origin:0x00000012	 instruction:0x00002101 | MOV R1, #01
+origin:0x00000020	 instruction:0x00000000 | ORIGIN 0X0020
+origin:0x00000020	 instruction:0x00000000 | EXECUTABLE_LOOP:
+origin:0x00000020	 instruction:0x00001E40 | SUB R0, R0, #1
+origin:0x00000024	 instruction:0x0000B160 | CBZ R0, INFINITE_LOOP
+origin:0x00000040	 instruction:0x00000000 | ORIGIN 0X0040
+origin:0x00000040	 instruction:0x00000000 | INFINITE_LOOP:
+origin:0x00000040	 instruction:0xF7FFFFE6 | BL INITIALIZATION
